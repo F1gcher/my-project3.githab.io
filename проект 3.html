@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+
+<htm lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ByteQuiz — Тесты по информатике</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+ lan    --border: #2a2a3a;
+    --accent: #00e5a0;
+    --accent2: #7b5ea7;
+    --accent3: #ff6b6b;
+    --warn: #ffd166;
+    --text: #e8e8f0;
+    --text2: #8888aa;
+    --easy: #00e5a0;
+    --med: #ffd166;
+    --hard: #ff6b6b;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --radius: 16px;
+    --glow: 0 0 30px rgba(0,229,160,0.15);
+  }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: var(–font-head);
+min-height: 100vh;
+overflow-x: hidden;
+position: relative;
+}
+
+/* BG grid */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none;
+z-index: 0;
+}
+
+/* Ambient blobs */
+.blob {
+position: fixed;
+border-radius: 50%;
+filter: blur(80px);
+pointer-events: none;
+z-index: 0;
+}
+.blob-1 { width: 400px; height: 400px; background: rgba(0,229,160,0.07); top: -100px; right: -100px; }
+.blob-2 { width: 300px; height: 300px; background: rgba(123,94,167,0.08); bottom: 100px; left: -80px; }
+.blob-3 { width: 200px; height: 200px; background: rgba(255,107,107,0.06); top: 50%; right: 20%; }
+
+#app { position: relative; z-index: 1; }
+
+/* ============================
+LANDING / TOPIC SELECTION
+============================ */
+#screen-landing {
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 60px 20px 40px;
+}
+
+.logo {
+font-size: clamp(2.4rem, 6vw, 4rem);
+font-weight: 800;
+letter-spacing: -2px;
+background: linear-gradient(135deg, var(–accent), var(–accent2));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+animation: fadeDown 0.6s ease both;
+}
+
+.tagline {
+font-family: var(–font-mono);
+color: var(–text2);
+font-size: 0.85rem;
+margin-top: 8px;
+letter-spacing: 2px;
+animation: fadeDown 0.7s 0.1s ease both;
+}
+
+.divider {
+width: 60px;
+height: 2px;
+background: linear-gradient(90deg, var(–accent), transparent);
+margin: 32px auto;
+animation: fadeDown 0.7s 0.2s ease both;
+}
+
+.section-title {
+font-size: 1rem;
+font-weight: 600;
+color: var(–text2);
+text-transform: uppercase;
+letter-spacing: 3px;
+margin-bottom: 28px;
+animation: fadeDown 0.7s 0.25s ease both;
+}
+
+.topics-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+gap: 16px;
+width: 100%;
+max-width: 960px;
+animation: fadeUp 0.7s 0.3s ease both;
+}
+
+.topic-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 24px;
+cursor: pointer;
+transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+position: relative;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
+.topic-card::before {
+content: ‘’;
+position: absolute;
+inset: 0;
+opacity: 0;
+transition: opacity 0.3s;
+border-radius: var(–radius);
+}
+
+.topic-card:hover { transform: translateY(-4px); border-color: var(–accent); box-shadow: var(–glow); }
+.topic-card:hover::before { opacity: 1; }
+
+.topic-icon {
+font-size: 2.2rem;
+line-height: 1;
+}
+
+.topic-name {
+font-size: 1.1rem;
+font-weight: 700;
+}
+
+.topic-desc {
+font-size: 0.82rem;
+color: var(–text2);
+font-family: var(–font-mono);
+line-height: 1.5;
+}
+
+.topic-meta {
+display: flex;
+gap: 10px;
+margin-top: 4px;
+flex-wrap: wrap;
+}
+
+.badge {
+font-family: var(–font-mono);
+font-size: 0.7rem;
+padding: 3px 10px;
+border-radius: 20px;
+border: 1px solid;
+}
+
+.badge-easy { color: var(–easy); border-color: var(–easy); background: rgba(0,229,160,0.08); }
+.badge-med { color: var(–med); border-color: var(–med); background: rgba(255,209,102,0.08); }
+.badge-hard { color: var(–hard); border-color: var(–hard); background: rgba(255,107,107,0.08); }
+
+/* Color accents per topic */
+.topic-card[data-color=“green”] { –tc: var(–easy); }
+.topic-card[data-color=“purple”] { –tc: var(–accent2); }
+.topic-card[data-color=“red”] { –tc: var(–hard); }
+.topic-card[data-color=“yellow”] { –tc: var(–warn); }
+.topic-card[data-color=“blue”] { –tc: #4fc3f7; }
+.topic-card[data-color=“pink”] { –tc: #f06292; }
+
+.topic-card .topic-icon { color: var(–tc); }
+.topic-card:hover { border-color: var(–tc); box-shadow: 0 0 30px color-mix(in srgb, var(–tc) 20%, transparent); }
+
+/* ============================
+QUIZ SCREEN
+============================ */
+#screen-quiz {
+display: none;
+min-height: 100vh;
+flex-direction: column;
+align-items: center;
+padding: 30px 20px 60px;
+}
+
+.quiz-header {
+width: 100%;
+max-width: 780px;
+display: flex;
+align-items: center;
+gap: 16px;
+margin-bottom: 28px;
+}
+
+.btn-back {
+background: var(–surface);
+border: 1px solid var(–border);
+color: var(–text2);
+border-radius: 10px;
+padding: 8px 14px;
+font-family: var(–font-mono);
+font-size: 0.78rem;
+cursor: pointer;
+transition: all 0.2s;
+white-space: nowrap;
+}
+.btn-back:hover { border-color: var(–accent); color: var(–accent); }
+
+.quiz-topic-name {
+font-size: 0.95rem;
+font-weight: 700;
+color: var(–text2);
+letter-spacing: 1px;
+}
+
+.quiz-progress-wrap {
+margin-left: auto;
+display: flex;
+align-items: center;
+gap: 12px;
+flex-wrap: wrap;
+justify-content: flex-end;
+}
+
+.q-counter {
+font-family: var(–font-mono);
+font-size: 0.8rem;
+color: var(–text2);
+}
+
+.diff-badge {
+font-family: var(–font-mono);
+font-size: 0.7rem;
+padding: 3px 10px;
+border-radius: 20px;
+transition: all 0.5s ease;
+}
+.diff-1 { background: rgba(0,229,160,0.15); color: var(–easy); border: 1px solid var(–easy); }
+.diff-2 { background: rgba(255,209,102,0.15); color: var(–warn); border: 1px solid var(–warn); }
+.diff-3 { background: rgba(255,107,107,0.15); color: var(–hard); border: 1px solid var(–hard); }
+
+.progress-bar-wrap {
+width: 100%;
+max-width: 780px;
+height: 4px;
+background: var(–border);
+border-radius: 4px;
+margin-bottom: 32px;
+overflow: visible;
+position: relative;
+}
+
+.progress-bar-fill {
+height: 100%;
+border-radius: 4px;
+background: linear-gradient(90deg, var(–accent), var(–accent2));
+transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+position: relative;
+}
+
+.progress-bar-fill::after {
+content: ‘’;
+position: absolute;
+right: -4px;
+top: 50%;
+transform: translateY(-50%);
+width: 10px;
+height: 10px;
+background: var(–accent);
+border-radius: 50%;
+box-shadow: 0 0 10px var(–accent);
+}
+
+/* Streak indicator */
+.streak-bar {
+width: 100%;
+max-width: 780px;
+display: flex;
+gap: 6px;
+margin-bottom: 20px;
+align-items: center;
+}
+
+.streak-label {
+font-family: var(–font-mono);
+font-size: 0.7rem;
+color: var(–text2);
+margin-right: 4px;
+}
+
+.streak-dot {
+width: 10px;
+height: 10px;
+border-radius: 50%;
+background: var(–border);
+transition: all 0.4s ease;
+}
+
+.streak-dot.correct { background: var(–easy); box-shadow: 0 0 8px var(–easy); }
+.streak-dot.wrong { background: var(–hard); box-shadow: 0 0 6px var(–hard); }
+
+.level-up-notif {
+position: fixed;
+top: 20px;
+left: 50%;
+transform: translateX(-50%) translateY(-80px);
+background: var(–surface);
+border: 1px solid var(–accent);
+border-radius: 12px;
+padding: 12px 24px;
+font-family: var(–font-mono);
+font-size: 0.85rem;
+color: var(–accent);
+z-index: 1000;
+transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1);
+box-shadow: 0 0 30px rgba(0,229,160,0.3);
+pointer-events: none;
+}
+.level-up-notif.show { transform: translateX(-50%) translateY(0); }
+
+/* Question card */
+.q-card {
+width: 100%;
+max-width: 780px;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 20px;
+padding: 40px;
+animation: cardIn 0.4s cubic-bezier(0.34,1.2,0.64,1) both;
+}
+
+@keyframes cardIn {
+from { opacity: 0; transform: translateY(20px) scale(0.97); }
+to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.q-number {
+font-family: var(–font-mono);
+font-size: 0.72rem;
+color: var(–text2);
+letter-spacing: 2px;
+margin-bottom: 12px;
+}
+
+.q-text {
+font-size: clamp(1rem, 2.5vw, 1.25rem);
+font-weight: 600;
+line-height: 1.6;
+margin-bottom: 32px;
+color: var(–text);
+}
+
+.q-code {
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: 10px;
+padding: 16px 20px;
+font-family: var(–font-mono);
+font-size: 0.82rem;
+color: var(–accent);
+margin: 12px 0 24px;
+overflow-x: auto;
+white-space: pre;
+line-height: 1.6;
+}
+
+.options-list {
+display: flex;
+flex-direction: column;
+gap: 12px;
+}
+
+.option-btn {
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 16px 20px;
+color: var(–text);
+font-family: var(–font-head);
+font-size: 0.95rem;
+cursor: pointer;
+text-align: left;
+transition: all 0.2s ease;
+display: flex;
+align-items: center;
+gap: 14px;
+position: relative;
+overflow: hidden;
+}
+
+.option-btn::before {
+content: ‘’;
+position: absolute;
+inset: 0;
+background: linear-gradient(90deg, var(–accent) 0%, transparent 100%);
+opacity: 0;
+transition: opacity 0.3s;
+}
+
+.option-btn:hover:not(:disabled) {
+border-color: var(–accent);
+transform: translateX(4px);
+box-shadow: 0 0 20px rgba(0,229,160,0.1);
+}
+
+.option-letter {
+font-family: var(–font-mono);
+font-size: 0.72rem;
+font-weight: 700;
+width: 26px;
+height: 26px;
+border-radius: 7px;
+border: 1px solid var(–border);
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
+transition: all 0.25s;
+}
+
+.option-btn:hover:not(:disabled) .option-letter {
+border-color: var(–accent);
+background: rgba(0,229,160,0.1);
+color: var(–accent);
+}
+
+.option-btn.correct {
+border-color: var(–easy);
+background: rgba(0,229,160,0.07);
+animation: correctPulse 0.5s ease;
+}
+.option-btn.correct .option-letter { border-color: var(–easy); background: rgba(0,229,160,0.2); color: var(–easy); }
+
+.option-btn.wrong {
+border-color: var(–hard);
+background: rgba(255,107,107,0.07);
+animation: wrongShake 0.4s ease;
+}
+.option-btn.wrong .option-letter { border-color: var(–hard); background: rgba(255,107,107,0.2); color: var(–hard); }
+
+.option-btn:disabled { cursor: not-allowed; }
+
+@keyframes correctPulse {
+0% { transform: scale(1); }
+40% { transform: scale(1.02); }
+100% { transform: scale(1); }
+}
+
+@keyframes wrongShake {
+0%, 100% { transform: translateX(0); }
+20% { transform: translateX(-8px); }
+40% { transform: translateX(8px); }
+60% { transform: translateX(-5px); }
+80% { transform: translateX(5px); }
+}
+
+.q-explanation {
+margin-top: 20px;
+padding: 16px 20px;
+background: rgba(0,229,160,0.06);
+border-left: 3px solid var(–accent);
+border-radius: 0 10px 10px 0;
+font-size: 0.88rem;
+color: var(–text2);
+line-height: 1.6;
+animation: fadeIn 0.4s ease both;
+display: none;
+}
+
+.q-explanation.show { display: block; }
+
+.next-btn {
+margin-top: 28px;
+padding: 14px 36px;
+background: linear-gradient(135deg, var(–accent), var(–accent2));
+border: none;
+border-radius: 12px;
+color: #0a0a0f;
+font-family: var(–font-head);
+font-size: 1rem;
+font-weight: 700;
+cursor: pointer;
+transition: all 0.25s ease;
+display: none;
+animation: fadeUp 0.4s 0.2s ease both;
+}
+
+.next-btn.show { display: inline-flex; align-items: center; gap: 8px; }
+.next-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,229,160,0.3); }
+.next-btn:active { transform: translateY(0); }
+
+/* ============================
+RESULTS SCREEN
+============================ */
+#screen-result {
+display: none;
+min-height: 100vh;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 40px 20px;
+}
+
+.result-card {
+width: 100%;
+max-width: 600px;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 24px;
+padding: 48px 40px;
+text-align: center;
+animation: cardIn 0.6s cubic-bezier(0.34,1.2,0.64,1) both;
+}
+
+.result-emoji {
+font-size: 4rem;
+margin-bottom: 20px;
+animation: bounceIn 0.6s 0.3s ease both;
+}
+
+@keyframes bounceIn {
+0% { transform: scale(0); opacity: 0; }
+60% { transform: scale(1.2); }
+100% { transform: scale(1); opacity: 1; }
+}
+
+.result-title {
+font-size: clamp(1.6rem, 4vw, 2.4rem);
+font-weight: 800;
+margin-bottom: 8px;
+}
+
+.result-subtitle {
+font-family: var(–font-mono);
+color: var(–text2);
+font-size: 0.82rem;
+letter-spacing: 1px;
+margin-bottom: 36px;
+}
+
+.score-circle {
+width: 140px;
+height: 140px;
+margin: 0 auto 36px;
+position: relative;
+}
+
+.score-circle svg { transform: rotate(-90deg); }
+
+.score-circle-bg { fill: none; stroke: var(–border); stroke-width: 8; }
+.score-circle-fill {
+fill: none;
+stroke-width: 8;
+stroke-linecap: round;
+stroke: var(–accent);
+stroke-dasharray: 339.3;
+stroke-dashoffset: 339.3;
+transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1) 0.5s;
+filter: drop-shadow(0 0 8px var(–accent));
+}
+
+.score-text {
+position: absolute;
+inset: 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+}
+
+.score-pct {
+font-size: 2rem;
+font-weight: 800;
+color: var(–accent);
+font-family: var(–font-mono);
+}
+
+.score-label { font-size: 0.7rem; color: var(–text2); font-family: var(–font-mono); }
+
+.stats-row {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 16px;
+margin-bottom: 36px;
+}
+
+.stat-box {
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 16px 12px;
+}
+
+.stat-num {
+font-size: 1.6rem;
+font-weight: 800;
+font-family: var(–font-mono);
+}
+
+.stat-lbl { font-size: 0.72rem; color: var(–text2); margin-top: 4px; font-family: var(–font-mono); }
+
+.result-btns {
+display: flex;
+gap: 12px;
+flex-wrap: wrap;
+justify-content: center;
+}
+
+.btn-primary {
+padding: 14px 30px;
+background: linear-gradient(135deg, var(–accent), var(–accent2));
+border: none;
+border-radius: 12px;
+color: #0a0a0f;
+font-family: var(–font-head);
+font-size: 0.95rem;
+font-weight: 700;
+cursor: pointer;
+transition: all 0.25s;
+}
+
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,229,160,0.3); }
+
+.btn-secondary {
+padding: 14px 30px;
+background: transparent;
+border: 1px solid var(–border);
+border-radius: 12px;
+color: var(–text2);
+font-family: var(–font-head);
+font-size: 0.95rem;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.25s;
+}
+
+.btn-secondary:hover { border-color: var(–accent); color: var(–accent); }
+
+/* Particles effect */
+.confetti-wrap {
+position: fixed;
+inset: 0;
+pointer-events: none;
+z-index: 999;
+overflow: hidden;
+}
+
+.confetti-piece {
+position: absolute;
+width: 8px;
+height: 8px;
+top: -20px;
+animation: confettiFall linear forwards;
+border-radius: 2px;
+}
+
+@keyframes confettiFall {
+to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes fadeDown {
+from { opacity: 0; transform: translateY(-12px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(12px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+from { opacity: 0; }
+to { opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+.q-card { padding: 24px 20px; }
+.stats-row { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.result-card { padding: 32px 20px; }
+.quiz-header { flex-wrap: wrap; }
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(–bg); }
+::-webkit-scrollbar-thumb { background: var(–border); border-radius: 3px; }
+</style>
+
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<div class="level-up-notif" id="levelNotif">🚀 Уровень сложности повышен!</div>
+<div class="level-down-notif" id="levelDownNotif" style="position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--surface);border:1px solid var(--warn);border-radius:12px;padding:12px 24px;font-family:var(--font-mono);font-size:0.85rem;color:var(--warn);z-index:1000;transition:transform 0.5s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 0 30px rgba(255,209,102,0.3);pointer-events:none;">📉 Сложность снижена</div>
+<div class="confetti-wrap" id="confettiWrap"></div>
+
+<div id="app">
+
+  <!-- LANDING -->
+
+  <div id="screen-landing">
+    <div class="logo">ByteQuiz</div>
+    <div class="tagline">// АДАПТИВНЫЕ ТЕСТЫ ПО ИНФОРМАТИКЕ</div>
+    <div class="divider"></div>
+    <div class="section-title">Выбери тему</div>
+    <div class="topics-grid" id="topicsGrid"></div>
+  </div>
+
+  <!-- QUIZ -->
+
+  <div id="screen-quiz">
+    <div class="quiz-header">
+      <button class="btn-back" onclick="goHome()">← Назад</button>
+      <span class="quiz-topic-name" id="quizTopicName"></span>
+      <div class="quiz-progress-wrap">
+        <span class="q-counter" id="qCounter"></span>
+        <span class="diff-badge diff-1" id="diffBadge">Легко</span>
+      </div>
+    </div>
+
+```
+<div class="progress-bar-wrap">
+  <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+</div>
+
+<div class="streak-bar" id="streakBar">
+  <span class="streak-label">Серия:</span>
+</div>
+
+<div class="q-card" id="qCard">
+  <div class="q-number" id="qNumber"></div>
+  <div class="q-text" id="qText"></div>
+  <div class="q-code" id="qCode" style="display:none"></div>
+  <div class="options-list" id="optionsList"></div>
+  <div class="q-explanation" id="qExplanation"></div>
+  <button class="next-btn" id="nextBtn" onclick="nextQuestion()">
+    Следующий вопрос →
+  </button>
+</div>
+```
+
+  </div>
+
+  <!-- RESULTS -->
+
+  <div id="screen-result">
+    <div class="result-card">
+      <div class="result-emoji" id="resultEmoji"></div>
+      <div class="result-title" id="resultTitle"></div>
+      <div class="result-subtitle" id="resultSubtitle"></div>
+      <div class="score-circle">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle class="score-circle-bg" cx="70" cy="70" r="54"/>
+          <circle class="score-circle-fill" id="scoreCircle" cx="70" cy="70" r="54"/>
+        </svg>
+        <div class="score-text">
+          <span class="score-pct" id="scorePct"></span>
+          <span class="score-label">баллов</span>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num" style="color:var(--easy)" id="statCorrect">0</div>
+          <div class="stat-lbl">правильно</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" style="color:var(--hard)" id="statWrong">0</div>
+          <div class="stat-lbl">ошибок</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" style="color:var(--warn)" id="statStreak">0</div>
+          <div class="stat-lbl">макс. серия</div>
+        </div>
+      </div>
+      <div class="result-btns">
+        <button class="btn-primary" onclick="retryQuiz()">↺ Пройти снова</button>
+        <button class="btn-secondary" onclick="goHome()">Выбрать тему</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+//  DATA — 6 TOPICS × 30+ QUESTIONS EACH (difficulty 1/2/3)
+// ============================================================
+const TOPICS = [
+  {
+    id: 'algorithms',
+    name: 'Алгоритмы',
+    icon: '⚙️',
+    desc: 'Сортировки, поиск, сложность, рекурсия',
+    color: 'green',
+    questions: [
+      // --- EASY (1) ---
+      { d:1, q:'Что такое алгоритм?', opts:['Программа на Python','Точная последовательность шагов для решения задачи','Структура данных','Компилятор'], a:1, exp:'Алгоритм — конечная, упорядоченная последовательность инструкций, ведущая к решению задачи.' },
+      { d:1, q:'Какое свойство НЕ является обязательным свойством алгоритма?', opts:['Дискретность','Определённость','Бесконечность','Результативность'], a:2, exp:'Алгоритм должен быть конечным — завершаться за конечное число шагов. Бесконечность — не свойство.' },
+      { d:1, q:'Как называется метод решения задачи «разбей на подзадачи»?', opts:['Перебор','Жадный алгоритм','Разделяй и властвуй','Динамическое программирование'], a:2, exp:'«Разделяй и властвуй» — рекурсивное разбиение задачи на меньшие подзадачи того же типа.' },
+      { d:1, q:'Что выводит цикл for i in range(3): print(i)?', opts:['1 2 3','0 1 2','0 1 2 3','1 2'], a:1, exp:'range(3) генерирует числа 0, 1, 2 — всего три значения начиная с нуля.' },
+      { d:1, q:'Что такое линейный поиск?', opts:['Поиск бинарным разбиением','Последовательный перебор всех элементов','Поиск через хэш-таблицу','Поиск по индексу'], a:1, exp:'Линейный поиск проверяет каждый элемент массива по порядку, пока не найдёт нужный.' },
+      { d:1, q:'Сколько шагов в худшем случае у линейного поиска в массиве из N элементов?', opts:['1','log₂N','N','N²'], a:2, exp:'В худшем случае нужного элемента нет — проверяем все N элементов.' },
+      { d:1, q:'Что означает O(1) в нотации Big O?', opts:['Линейное время','Квадратичное время','Постоянное время, не зависящее от N','Логарифмическое время'], a:2, exp:'O(1) — константная сложность: время выполнения не зависит от размера входных данных.' },
+      { d:1, q:'Какой алгоритм сортировки имеет среднюю сложность O(n log n)?', opts:['Пузырьковая сортировка','Быстрая сортировка','Сортировка вставками','Линейный поиск'], a:1, exp:'Быстрая сортировка (QuickSort) работает за O(n log n) в среднем случае.' },
+      { d:1, q:'Что такое рекурсия?', opts:['Цикл for','Функция, которая вызывает саму себя','Массив массивов','Сортировка данных'], a:1, exp:'Рекурсия — когда функция в своём теле вызывает саму себя, обычно с более простыми параметрами.' },
+      { d:1, q:'Что является обязательным у рекурсивной функции?', opts:['Глобальные переменные','База рекурсии (условие остановки)','Тип данных int','Цикл while'], a:1, exp:'База рекурсии — условие, при котором функция прекращает вызывать себя; без неё — бесконечная рекурсия.' },
+      // --- MEDIUM (2) ---
+      { d:2, q:'Какова сложность пузырьковой сортировки в худшем случае?', opts:['O(n)','O(n log n)','O(n²)','O(log n)'], a:2, exp:'Пузырьковая сортировка выполняет два вложенных цикла, что даёт O(n²) в худшем и среднем случае.' },
+      { d:2, q:'Бинарный поиск работает только если...', opts:['Массив несортирован','Массив отсортирован','Массив содержит уникальные элементы','Массив непустой'], a:1, exp:'Бинарный поиск каждый раз делит отрезок пополам, это возможно только в отсортированном массиве.' },
+      { d:2, q:'Сколько шагов делает бинарный поиск в массиве из 1024 элементов в худшем случае?', opts:['1024','512','10','20'], a:2, exp:'1024 = 2¹⁰, значит log₂(1024) = 10 шагов.' },
+      { d:2, q:'Что выводит factorial(5) при классической рекурсивной реализации?', opts:['5','25','120','15'], a:2, exp:'5! = 5×4×3×2×1 = 120.' },
+      { d:2, q:'Алгоритм с O(2ⁿ) — это алгоритм...', opts:['Линейный','Полиномиальный','Экспоненциальный','Логарифмический'], a:2, exp:'O(2ⁿ) — экспоненциальный рост: время удваивается при каждом прибавлении единицы к N.' },
+      { d:2, q:'Что такое жадный алгоритм?', opts:['Алгоритм с наибольшей памятью','Алгоритм, делающий локально оптимальный выбор на каждом шаге','Алгоритм полного перебора','Алгоритм с рекурсией'], a:1, exp:'Жадный алгоритм выбирает лучший вариант в данный момент, не заглядывая вперёд.' },
+      { d:2, q:'Как называется сортировка, стабильно работающая за O(n log n) и использующая дополнительную память?', opts:['QuickSort','Сортировка вставками','Merge Sort','HeapSort'], a:2, exp:'Merge Sort (сортировка слиянием) стабильна и всегда работает за O(n log n), но требует O(n) памяти.' },
+      { d:2, q:'Что такое мемоизация в рекурсии?', opts:['Хранение предыдущих результатов для избегания повторных вычислений','Обход дерева','Вид сортировки','Тип цикла'], a:0, exp:'Мемоизация — кэширование результатов вызовов функции, чтобы не считать одно и то же дважды.' },
+      { d:2, q:'Число Фибоначчи F(n) = F(n-1) + F(n-2). Наивная рекурсивная реализация имеет сложность:', opts:['O(n)','O(n²)','O(2ⁿ)','O(log n)'], a:2, exp:'Без мемоизации дерево вызовов растёт экспоненциально, так как одни подзадачи считаются многократно.' },
+      { d:2, q:'Что означает «устойчивость» сортировки?', opts:['Она всегда быстрая','Одинаковые элементы сохраняют исходный относительный порядок','Она не использует память','Она работает за O(1)'], a:1, exp:'Устойчивая сортировка не меняет порядок равных элементов, что важно при многоключевой сортировке.' },
+      // --- HARD (3) ---
+      { d:3, q:'Какова амортизированная сложность одной операции в динамическом массиве при добавлении в конец?', opts:['O(n)','O(1) амортизированно','O(log n)','O(n²)'], a:1, exp:'При удвоении размера редкие O(n) копирования размазываются, и среднее время вставки остаётся O(1).' },
+      { d:3, q:'Алгоритм Дейкстры решает задачу...', opts:['Сортировки массива','Поиска кратчайшего пути в графе с неотрицательными весами','Обхода бинарного дерева','Нахождения максимального потока'], a:1, exp:'Дейкстра находит кратчайшие пути от одной вершины до всех остальных в графе без отрицательных рёбер.' },
+      { d:3, q:'Что такое NP-полная задача?', opts:['Задача, решаемая за полиномиальное время','Задача, для которой не доказано полиномиального решения, но проверка решения быстра','Задача с O(1) решением','Задача без решения'], a:1, exp:'NP-полные задачи: решение можно проверить за полиномиальное время, но нахождение — нет (пока что).' },
+      { d:3, q:'Метод «разделяй и властвуй» для суммирования N чисел даст сложность:', opts:['O(n²)','O(n log n)','O(n)','O(log n)'], a:2, exp:'Каждый элемент обрабатывается ровно один раз, поэтому суммирование остаётся O(n) независимо от метода.' },
+      { d:3, q:'Что такое «парадокс дня рождения» в контексте хэш-таблиц?', opts:['Таблица не может хранить даты','Коллизии происходят значительно раньше, чем кажется интуитивно','Ключи должны быть числами','Хэш-функция зависит от даты'], a:1, exp:'При ~√N ключах вероятность коллизии уже ~50% из-за математики комбинаторики.' },
+      { d:3, q:'Что гарантирует инвариант цикла?', opts:['Цикл завершится','Условие, истинное до, во время и после каждой итерации','Отсутствие побочных эффектов','Порядок выполнения операций'], a:1, exp:'Инвариант цикла — логическое утверждение, сохраняющееся на каждой итерации; используется для доказательства корректности.' },
+      { d:3, q:'Алгоритм A* отличается от Дейкстры тем, что...', opts:['Работает медленнее','Использует эвристику для направления поиска к цели','Не работает в графах','Требует отсортированных рёбер'], a:1, exp:'A* добавляет к стоимости пути эвристическую оценку расстояния до цели, что ускоряет поиск.' },
+      { d:3, q:'Что такое DP (динамическое программирование)?', opts:['Вид языка программирования','Метод хранения программы в памяти','Метод решения задач путём разбиения на перекрывающиеся подзадачи с мемоизацией','Алгоритм поиска в глубину'], a:2, exp:'DP запоминает результаты подзадач и избегает повторных вычислений — это делает многие задачи полиномиальными.' },
+      { d:3, q:'Как изменится время работы алгоритма O(n²) если n увеличить в 10 раз?', opts:['В 10 раз','В 100 раз','В 1000 раз','В 20 раз'], a:1, exp:'O(n²): (10n)² = 100n², то есть время увеличивается в 100 раз.' },
+      { d:3, q:'Какой алгоритм сортировки лучше всего подходит для почти отсортированных данных?', opts:['Быстрая сортировка','Пузырьковая сортировка','Сортировка вставками','Merge Sort'], a:2, exp:'Сортировка вставками для почти отсортированного массива работает за O(n) — каждый элемент почти на месте.' },
+    ]
+  },
+  {
+    id: 'networks',
+    name: 'Компьютерные сети',
+    icon: '🌐',
+    desc: 'TCP/IP, HTTP, протоколы, топологии',
+    color: 'blue',
+    questions: [
+      { d:1, q:'Что такое IP-адрес?', opts:['Физический адрес сетевой карты','Уникальный числовой идентификатор устройства в сети','Доменное имя сайта','Номер порта'], a:1, exp:'IP-адрес однозначно идентифицирует устройство в IP-сети и используется для маршрутизации пакетов.' },
+      { d:1, q:'Чем отличается TCP от UDP?', opts:['TCP быстрее UDP','TCP гарантирует доставку пакетов, UDP — нет','UDP использует IP, TCP — нет','Нет разницы'], a:1, exp:'TCP — надёжный протокол с установкой соединения и подтверждением доставки; UDP — без гарантий, но быстрее.' },
+      { d:1, q:'Что означает HTTP?', opts:['HyperText Transfer Protocol','High Transfer Tunnel Protocol','Hyper Technical Transfer Protocol','Hard Text Transfer Protocol'], a:0, exp:'HTTP — протокол передачи гипертекста, основа обмена данными в World Wide Web.' },
+      { d:1, q:'Какой порт использует HTTPS по умолчанию?', opts:['80','22','443','8080'], a:2, exp:'HTTPS использует порт 443, тогда как HTTP — порт 80.' },
+      { d:1, q:'Что такое DNS?', opts:['Протокол передачи файлов','Система доменных имён, переводящая домены в IP-адреса','Тип файловой системы','Протокол шифрования'], a:1, exp:'DNS (Domain Name System) — иерархическая система, превращающая человекочитаемые имена типа google.com в IP-адреса.' },
+      { d:1, q:'Какой протокол используется для отправки email?', opts:['FTP','HTTP','SMTP','POP3'], a:2, exp:'SMTP (Simple Mail Transfer Protocol) используется для отправки электронной почты.' },
+      { d:1, q:'Что такое MAC-адрес?', opts:['IP-адрес версии 6','Физический (аппаратный) адрес сетевого интерфейса','Адрес маршрутизатора','Логический адрес сети'], a:1, exp:'MAC-адрес — уникальный 48-битный идентификатор сетевой карты, работающий на канальном уровне.' },
+      { d:1, q:'Сколько бит в IPv4-адресе?', opts:['16','32','64','128'], a:1, exp:'IPv4-адрес состоит из 32 бит, записываемых как четыре десятичных числа от 0 до 255.' },
+      { d:1, q:'Топология «звезда» подключает все устройства через...', opts:['Кольцевой кабель','Центральный коммутатор или концентратор','Прямые связи между всеми парами','Общую шину'], a:1, exp:'В топологии «звезда» все узлы соединены с центральным устройством (свитчем или хабом).' },
+      { d:1, q:'Что такое маршрутизатор (router)?', opts:['Устройство для усиления Wi-Fi','Устройство, соединяющее разные сети и направляющее пакеты','Коммутатор локальной сети','Серверный компонент'], a:1, exp:'Маршрутизатор работает на сетевом уровне и определяет оптимальный путь для каждого пакета.' },
+      { d:2, q:'Чем отличается свитч от хаба?', opts:['Хаб работает быстрее','Свитч отправляет данные конкретному получателю, хаб — всем','Хаб поддерживает VLAN','Нет разницы'], a:1, exp:'Свитч хранит таблицу MAC-адресов и направляет кадры только нужному порту, снижая нагрузку на сеть.' },
+      { d:2, q:'Что такое NAT?', opts:['Алгоритм шифрования','Трансляция сетевых адресов (частных IP во внешние)','Протокол аутентификации','Тип маршрутизации'], a:1, exp:'NAT (Network Address Translation) позволяет нескольким устройствам разделять один публичный IP-адрес.' },
+      { d:2, q:'Что определяет маска подсети?', opts:['Скорость соединения','Какая часть IP-адреса — сеть, а какая — хост','Протокол маршрутизации','Тип кабеля'], a:1, exp:'Маска подсети побитово указывает, какие биты IP-адреса принадлежат сети, а какие — узлу.' },
+      { d:2, q:'Что такое VLAN?', opts:['Тип кабеля','Виртуальная локальная сеть, логически изолирующая устройства','Протокол передачи видео','Вид антенны Wi-Fi'], a:1, exp:'VLAN (Virtual LAN) логически разделяет физическую сеть на изолированные сегменты без дополнительного оборудования.' },
+      { d:2, q:'Протокол ARP решает задачу...', opts:['Преобразования доменных имён в IP','Преобразования IP-адреса в MAC-адрес','Шифрования трафика','Маршрутизации пакетов'], a:1, exp:'ARP (Address Resolution Protocol) находит MAC-адрес узла по известному IP-адресу внутри локальной сети.' },
+      { d:2, q:'Что такое TTL в IP-пакете?', opts:['Размер пакета','Time To Live — счётчик, уменьшаемый каждым маршрутизатором, предотвращает зацикливание','Тип шифрования','Порт назначения'], a:1, exp:'TTL уменьшается на 1 на каждом маршрутизаторе; при достижении 0 пакет отбрасывается.' },
+      { d:2, q:'Что такое трёхстороннее рукопожатие TCP?', opts:['Алгоритм шифрования','SYN → SYN-ACK → ACK — установка TCP-соединения','Передача файла по частям','Протокол аутентификации'], a:1, exp:'Three-way handshake: клиент посылает SYN, сервер — SYN-ACK, клиент — ACK; соединение установлено.' },
+      { d:2, q:'IPv6 имеет длину адреса:', opts:['32 бита','64 бита','128 бит','256 бит'], a:2, exp:'IPv6-адрес — 128 бит, записывается как 8 групп по 4 шестнадцатеричные цифры.' },
+      { d:2, q:'Что делает протокол DHCP?', opts:['Шифрует трафик','Автоматически выдаёт устройствам IP-адреса','Фильтрует спам','Обходит NAT'], a:1, exp:'DHCP (Dynamic Host Configuration Protocol) автоматически назначает IP, маску, шлюз и DNS клиентам.' },
+      { d:2, q:'Какой код HTTP-ответа означает «Не найдено»?', opts:['200','301','403','404'], a:3, exp:'HTTP 404 (Not Found) — сервер не нашёл запрошенный ресурс.' },
+      { d:3, q:'В чём разница между TCP sliding window и congestion window?', opts:['Нет разницы','Sliding window управляет потоком от отправителя к приёмнику; congestion window ограничивает скорость при перегрузке сети','Congestion window используется в UDP','Оба контролируют только размер пакета'], a:1, exp:'Flow control (sliding window) регулирует передачу между двумя узлами; congestion control — реакция на перегрузку маршрутизаторов.' },
+      { d:3, q:'Что такое BGP и где применяется?', opts:['Внутренний протокол маршрутизации','Протокол обмена маршрутами между автономными системами (AS) в интернете','Протокол VPN','Алгоритм NAT'], a:1, exp:'BGP (Border Gateway Protocol) — основа интернет-маршрутизации: AS обменивается достижимыми префиксами по BGP.' },
+      { d:3, q:'Что такое MTU и чему равен типичный MTU для Ethernet?', opts:['Минимальный размер пакета, 64 байта','Максимальный размер передаваемого блока, 1500 байт','Тип шифрования','Протокол маршрутизации'], a:1, exp:'MTU (Maximum Transmission Unit) — максимальный размер кадра; для Ethernet это 1500 байт. При превышении — IP-фрагментация.' },
+      { d:3, q:'Что такое OSPF и чем он отличается от RIP?', opts:['OSPF — distance-vector, RIP — link-state','OSPF — link-state с знанием всей топологии; RIP — distance-vector, передаёт только таблицы расстояний','Оба одинаковые','OSPF устарел'], a:1, exp:'OSPF (link-state) каждый узел знает полную топологию; RIP (distance-vector) передаёт только метрики — устарел в крупных сетях.' },
+      { d:3, q:'Что такое QoS в сети?', opts:['Качество обслуживания: приоритизация трафика','Квантовое шифрование','Вид протокола IP','Алгоритм сжатия'], a:0, exp:'QoS (Quality of Service) управляет полосой пропускания, задержкой и джиттером, приоритизируя важный трафик (VoIP, видео).' },
+      { d:3, q:'В чём суть атаки «man-in-the-middle» (MitM)?', opts:['DDoS-атака','Злоумышленник перехватывает и подменяет трафик между двумя узлами','SQL-инъекция','Перебор паролей'], a:1, exp:'MitM: атакующий встаёт между клиентом и сервером, может читать и изменять данные; защита — TLS-сертификаты.' },
+      { d:3, q:'Что такое CIDR-нотация /24?', opts:['IP версии 6','Маска подсети 255.255.255.0 (24 бита под сеть, 8 — под хосты)','Протокол маршрутизации','Тип шифрования'], a:1, exp:'/24 означает первые 24 бита — адрес сети; оставшиеся 8 бит — до 254 хоста в подсети.' },
+      { d:3, q:'Что такое anycast-адресация?', opts:['Отправка пакета группе узлов','Пакет доставляется ближайшему узлу из группы с одинаковым IP','Broadcast в локальной сети','Адрес для IPv4'], a:1, exp:'Anycast: несколько узлов объявляют один IP; маршрутизаторы направляют пакет к топологически ближайшему.' },
+      { d:3, q:'Что такое «split horizon» в дистанс-векторной маршрутизации?', opts:['Разбиение сети на подсети','Правило: не объявлять маршрут на интерфейс, с которого он был получен (предотвращение петель)','Балансировка нагрузки','Тип шифрования'], a:1, exp:'Split horizon предотвращает маршрутные петли: если маршрут узнан с интерфейса X, не посылай его обратно в X.' },
+      { d:3, q:'Зачем в HTTPS используется асимметричная криптография при установке соединения?', opts:['Для ускорения передачи','Для безопасного обмена симметричным ключом, не передавая его открытым текстом','Для хранения паролей','Для сжатия данных'], a:1, exp:'RSA/ECDH используется на этапе handshake, чтобы согласовать сессионный симметричный ключ без его передачи по сети.' },
+    ]
+  },
+  {
+    id: 'databases',
+    name: 'Базы данных',
+    icon: '🗄️',
+    desc: 'SQL, реляционные БД, индексы, транзакции',
+    color: 'yellow',
+    questions: [
+      { d:1, q:'Что такое реляционная база данных?', opts:['База, хранящая файлы','База, организующая данные в таблицы со связями','Файловая система','Кэш в оперативной памяти'], a:1, exp:'Реляционная БД хранит данные в таблицах (отношениях); связи между ними задаются через внешние ключи.' },
+      { d:1, q:'Что делает SQL-запрос SELECT * FROM users?', opts:['Удаляет таблицу users','Возвращает все строки и столбцы таблицы users','Создаёт таблицу users','Обновляет данные в users'], a:1, exp:'SELECT * выбирает все столбцы; FROM users — из таблицы users. Результат — все записи.' },
+      { d:1, q:'Что такое первичный ключ (Primary Key)?', opts:['Поле с паролем','Уникальный идентификатор каждой строки в таблице','Первый столбец таблицы','Внешняя ссылка на другую таблицу'], a:1, exp:'PRIMARY KEY уникально идентифицирует каждую строку; не может быть NULL и должен быть уникален.' },
+      { d:1, q:'Что делает команда INSERT INTO?', opts:['Удаляет строки','Добавляет новые строки в таблицу','Обновляет существующие строки','Выбирает строки'], a:1, exp:'INSERT INTO table (col1, col2) VALUES (val1, val2) — вставляет новую запись в таблицу.' },
+      { d:1, q:'Что такое NULL в SQL?', opts:['Число 0','Пустая строка','Отсутствие значения (неизвестно)','Ошибка запроса'], a:2, exp:'NULL означает отсутствие значения, а не ноль или пустую строку; для проверки используется IS NULL.' },
+      { d:1, q:'Как отсортировать результат по убыванию?', opts:['ORDER BY col ASC','ORDER BY col DESC','SORT col DOWN','GROUP BY col DESC'], a:1, exp:'DESC (descending) — убывающий порядок; ASC (ascending) — возрастающий (по умолчанию).' },
+      { d:1, q:'Что делает WHERE в SQL?', opts:['Сортирует результат','Фильтрует строки по условию','Объединяет таблицы','Группирует строки'], a:1, exp:'WHERE task_id = 5 — оставляет только строки, где task_id равен 5; применяется до GROUP BY.' },
+      { d:1, q:'Что такое внешний ключ (Foreign Key)?', opts:['Ключ шифрования','Первичный ключ другой таблицы, создающий связь между таблицами','Поле с email','Индекс'], a:1, exp:'FK ссылается на PK другой таблицы и обеспечивает ссылочную целостность данных.' },
+      { d:1, q:'Какой оператор объединяет строки двух SELECT-запросов без дубликатов?', opts:['JOIN','UNION','MERGE','INTERSECT'], a:1, exp:'UNION объединяет результаты двух SELECT и убирает дубликаты; UNION ALL оставляет дубликаты.' },
+      { d:1, q:'Что возвращает COUNT(*)?', opts:['Сумму значений','Количество строк в результате','Максимальное значение','Среднее значение'], a:1, exp:'COUNT(*) подсчитывает количество строк, включая те, где есть NULL.' },
+      { d:2, q:'В чём разница между INNER JOIN и LEFT JOIN?', opts:['Нет разницы','INNER JOIN возвращает только совпадающие строки; LEFT JOIN — все строки левой таблицы','LEFT JOIN быстрее','INNER JOIN работает с 3 таблицами'], a:1, exp:'INNER JOIN: только строки с совпадением в обеих таблицах. LEFT JOIN: все строки левой + NULL для несовпадающих правой.' },
+      { d:2, q:'Что такое индекс в БД?', opts:['Первичный ключ','Структура данных (B-дерево), ускоряющая поиск по столбцу','Тип соединения','Ограничение NOT NULL'], a:1, exp:'Индекс — дополнительная структура (обычно B-tree), позволяющая находить строки без полного сканирования таблицы.' },
+      { d:2, q:'Что такое транзакция в SQL?', opts:['Тип JOIN','Набор операций, выполняемых атомарно (все или ни одна)','Тип индекса','Хранимая процедура'], a:1, exp:'Транзакция гарантирует атомарность: либо все изменения применяются (COMMIT), либо откатываются (ROLLBACK).' },
+      { d:2, q:'Что такое свойства ACID?', opts:['Atomicity, Consistency, Isolation, Durability — гарантии транзакций','Типы данных в SQL','Алгоритмы индексирования','Команды SQL'], a:0, exp:'ACID: A-атомарность, C-согласованность, I-изолированность, D-долговечность — ключевые гарантии транзакций.' },
+      { d:2, q:'Что делает GROUP BY?', opts:['Фильтрует строки','Группирует строки по значению столбца для применения агрегатных функций','Объединяет таблицы','Сортирует результат'], a:1, exp:'GROUP BY объединяет строки с одинаковым значением; используется с COUNT, SUM, AVG, MAX, MIN.' },
+      { d:2, q:'Чем HAVING отличается от WHERE?', opts:['Нет разницы','HAVING фильтрует группы (после GROUP BY); WHERE — строки (до GROUP BY)','HAVING быстрее','WHERE работает только с числами'], a:1, exp:'WHERE фильтрует до группировки; HAVING — после, поэтому может использовать агрегатные функции.' },
+      { d:2, q:'Что такое нормализация базы данных?', opts:['Резервное копирование','Процесс организации данных для устранения избыточности и аномалий','Шифрование данных','Индексирование'], a:1, exp:'Нормализация: разбиение таблиц по нормальным формам (1НФ, 2НФ, 3НФ, BCNF) для устранения дублирования.' },
+      { d:2, q:'Что такое VIEW в SQL?', opts:['Физическая копия таблицы','Виртуальная таблица на основе SELECT-запроса','Индекс','Тип ограничения'], a:1, exp:'VIEW — именованный SELECT-запрос; при обращении к нему данные вычисляются динамически из базовых таблиц.' },
+      { d:2, q:'Что такое хранимая процедура?', opts:['Тип индекса','Заранее скомпилированный SQL-код, хранящийся в БД и вызываемый по имени','Триггер','Тип JOIN'], a:1, exp:'Stored procedure — набор SQL-команд, сохранённый в БД; вызывается многократно, снижает нагрузку на сеть.' },
+      { d:2, q:'Что такое NoSQL база данных?', opts:['База без SQL-синтаксиса','БД, не использующая исключительно реляционную модель (документы, граф, ключ-значение)','База только для чисел','Устаревший тип БД'], a:1, exp:'NoSQL охватывает документные (MongoDB), колоночные (Cassandra), графовые (Neo4j) и key-value (Redis) хранилища.' },
+      { d:3, q:'Что такое уровень изоляции SERIALIZABLE?', opts:['Самый низкий уровень','Самый высокий уровень: транзакции выполняются так, как если бы они были последовательны','Только для чтения','Без блокировок'], a:1, exp:'SERIALIZABLE исключает все аномалии (dirty read, phantom read), но максимально снижает параллелизм.' },
+      { d:3, q:'Что такое оконные функции SQL (Window Functions)?', opts:['Функции для работы со строками','Агрегации по разделам без схлопывания строк (ROW_NUMBER, RANK, SUM OVER)','Функции для JSON','Тип индекса'], a:1, exp:'Window functions вычисляют значения относительно «окна» строк (PARTITION BY/ORDER BY), не группируя результат.' },
+      { d:3, q:'Что такое B-дерево и почему оно используется в индексах БД?', opts:['Бинарное дерево','Сбалансированное дерево поиска с высоким ветвлением, дающее O(log n) операции на диске','Хэш-таблица','Граф зависимостей'], a:1, exp:'B-tree сбалансирован, хорошо подходит для дисков: один узел = один блок, минимизируя дисковые I/O.' },
+      { d:3, q:'В чём проблема N+1 запросов в ORM?', opts:['ORM делает N ошибок','Для выборки N связанных сущностей делается N дополнительных запросов вместо одного JOIN','Транзакция блокирует базу','Нехватка индексов'], a:1, exp:'N+1: один запрос на список + по одному на каждый элемент. Решение — eager loading (JOIN или подзапрос).' },
+      { d:3, q:'Что такое шардирование базы данных?', opts:['Резервное копирование','Горизонтальное разбиение данных по нескольким физическим серверам','Индексирование больших таблиц','Кэширование запросов'], a:1, exp:'Sharding — каждый шард содержит подмножество строк (по ключу). Позволяет масштабировать запись горизонтально.' },
+      { d:3, q:'Что такое CAP-теорема?', opts:['Типы данных в SQL','В распределённой системе нельзя одновременно гарантировать Consistency, Availability и Partition tolerance','Алгоритм репликации','Типы транзакций'], a:1, exp:'CAP: при сетевом разделении (P) приходится жертвовать либо согласованностью (C), либо доступностью (A).' },
+      { d:3, q:'Что такое индекс покрывающего запроса (covering index)?', opts:['Индекс по всем столбцам таблицы','Индекс, содержащий все столбцы запроса, позволяя ответить без обращения к основной таблице','Тип первичного ключа','Partial index'], a:1, exp:'Covering index содержит все столбцы SELECT и WHERE, что позволяет БД не читать страницы основной таблицы.' },
+      { d:3, q:'Что такое MVCC?', opts:['Протокол репликации','Multi-Version Concurrency Control: читатели не блокируют писателей, каждая транзакция видит свой снимок данных','Тип триггера','Алгоритм сортировки'], a:1, exp:'MVCC хранит несколько версий строки; позволяет читать без блокировок записи. Используется в PostgreSQL, MySQL InnoDB.' },
+      { d:3, q:'В чём разница между реализацией JSON в PostgreSQL (jsonb vs json)?', opts:['Нет разницы','jsonb хранит данные в бинарном формате: поддерживает индексы (GIN), быстрее при чтении; json хранит текст','json поддерживает индексы','jsonb устарел'], a:1, exp:'jsonb: бинарный, дубликаты ключей удаляются, порядок не сохраняется, но есть индексы GIN. json: исходный текст, быстрее запись.' },
+      { d:3, q:'Что такое partitioning (секционирование) таблиц?', opts:['То же, что шардирование','Логическое разбиение большой таблицы на части (по диапазону, хэшу, списку) внутри одной БД','Тип репликации','Вид индекса'], a:1, exp:'Partitioning делит таблицу на секции внутри одного сервера; планировщик запросов пропускает ненужные секции (partition pruning).' },
+    ]
+  },
+  {
+    id: 'oop',
+    name: 'ООП и Паттерны',
+    icon: '🧩',
+    desc: 'Классы, наследование, паттерны проектирования',
+    color: 'purple',
+    questions: [
+      { d:1, q:'Что такое класс в ООП?', opts:['Экземпляр объекта','Шаблон/чертёж для создания объектов с общими свойствами и методами','Глобальная переменная','Функция без параметров'], a:1, exp:'Класс описывает структуру и поведение объектов; объект — конкретный экземпляр класса.' },
+      { d:1, q:'Что такое инкапсуляция?', opts:['Создание копии объекта','Сокрытие внутреннего состояния и предоставление доступа через методы','Передача по ссылке','Вид наследования'], a:1, exp:'Инкапсуляция скрывает детали реализации, открывая только нужный интерфейс; защищает целостность данных.' },
+      { d:1, q:'Что такое наследование?', opts:['Создание независимого класса','Механизм, при котором класс перенимает свойства и методы родительского класса','Удаление объекта','Интерфейс для методов'], a:1, exp:'Наследование позволяет создавать новые классы на базе существующих, не дублируя код.' },
+      { d:1, q:'Что такое полиморфизм?', opts:['Тип данных','Способность разных классов реализовывать один интерфейс по-своему','Глобальная переменная','Алгоритм сортировки'], a:1, exp:'Полиморфизм: один и тот же вызов метода ведёт себя по-разному в зависимости от типа объекта.' },
+      { d:1, q:'Что такое конструктор?', opts:['Деструктор','Специальный метод, вызываемый при создании объекта','Метод для удаления объекта','Метод сортировки'], a:1, exp:'Конструктор инициализирует новый объект; в Python это __init__, в Java — метод с именем класса.' },
+      { d:1, q:'Что означает ключевое слово this/self?', opts:['Родительский класс','Ссылка на текущий экземпляр объекта','Статический метод','Тип данных'], a:1, exp:'self (Python) / this (Java, JS) ссылается на конкретный объект, вызвавший метод.' },
+      { d:1, q:'Что такое абстрактный класс?', opts:['Класс без методов','Класс, который нельзя создать напрямую; содержит абстрактные методы для переопределения','Класс с одним методом','Интерфейс'], a:1, exp:'Абстрактный класс задаёт общий контракт для подклассов; экземпляр создать нельзя — только наследника.' },
+      { d:1, q:'Что такое интерфейс в ООП?', opts:['Тип данных','Контракт: набор методов без реализации, которые класс обязан реализовать','Конструктор класса','Статический метод'], a:1, exp:'Интерфейс задаёт набор методов; реализующий класс обязан предоставить их тела.' },
+      { d:1, q:'Что такое паттерн Singleton?', opts:['Несколько экземпляров класса','Гарантия существования ровно одного экземпляра класса и глобальная точка доступа','Паттерн для сортировки','Тип наследования'], a:1, exp:'Singleton ограничивает создание объекта одним экземпляром; полезен для менеджеров конфигурации, логгеров.' },
+      { d:1, q:'Что такое паттерн Observer?', opts:['Создание объектов','Издатель уведомляет подписчиков об изменении состояния','Наследование классов','Алгоритм сортировки'], a:1, exp:'Observer (наблюдатель): объект-издатель хранит список подписчиков и оповещает их при изменении состояния.' },
+      { d:2, q:'В чём разница между агрегацией и композицией?', opts:['Нет разницы','Агрегация — слабая связь (объект может существовать отдельно); композиция — сильная (часть умирает с целым)','Агрегация — наследование','Композиция — полиморфизм'], a:1, exp:'Compositon: часть не существует без целого. Aggregation: объект может принадлежать нескольким или жить независимо.' },
+      { d:2, q:'Что нарушает принцип Open/Closed?', opts:['Добавление нового метода','Изменение существующего класса для добавления новой функциональности вместо расширения','Использование интерфейса','Применение наследования'], a:1, exp:'OCP: класс открыт для расширения, закрыт для модификации. Вместо правки кода — создавай новые подклассы/стратегии.' },
+      { d:2, q:'Что такое принцип Liskov (LSP)?', opts:['Интерфейс разделения','Подтип должен быть полностью взаимозаменяем с базовым типом без нарушения программы','Принцип единственной ответственности','Инверсия зависимостей'], a:1, exp:'LSP: если S — подтип T, объекты типа T можно заменить на S без изменения корректности программы.' },
+      { d:2, q:'Что такое паттерн Factory Method?', opts:['Создание одного экземпляра','Метод создания объектов, позволяющий подклассам определять, какой класс создать','Наблюдатель за объектами','Алгоритм сортировки'], a:1, exp:'Factory Method откладывает решение о создании конкретного класса в подкласс, следуя OCP.' },
+      { d:2, q:'Что такое паттерн Decorator?', opts:['Удаление объекта','Динамическое добавление поведения объекту, оборачивая его в другой объект','Тип наследования','Синглтон'], a:1, exp:'Decorator добавляет обязанности объекту без изменения его класса; альтернатива множественному наследованию.' },
+      { d:2, q:'Что такое принцип DI (Dependency Injection)?', opts:['Создание зависимостей внутри класса','Передача зависимостей снаружи, а не создание внутри класса','Удаление объектов','Тип полиморфизма'], a:1, exp:'DI: класс получает зависимости через конструктор/метод/поле снаружи, а не создаёт их сам — улучшает тестируемость.' },
+      { d:2, q:'В чём разница между паттернами Strategy и State?', opts:['Нет разницы','Strategy меняет алгоритм извне; State меняет поведение объекта в зависимости от его внутреннего состояния','State — структурный паттерн','Strategy — поведенческий'], a:1, exp:'Strategy: клиент выбирает алгоритм. State: объект сам меняет поведение при смене внутреннего состояния.' },
+      { d:2, q:'Что такое паттерн Adapter?', opts:['Создание копии объекта','Обёртка, позволяющая несовместимым интерфейсам работать вместе','Управление жизненным циклом','Тип наследования'], a:1, exp:'Adapter оборачивает объект с несовместимым интерфейсом, предоставляя нужный — как переходник для розетки.' },
+      { d:2, q:'Что означает принцип ISP (Interface Segregation)?', opts:['Один большой интерфейс лучше','Лучше много специфичных интерфейсов, чем один толстый: клиент не должен зависеть от ненужных методов','Интерфейсы нельзя наследовать','ISP — то же, что OCP'], a:1, exp:'ISP: раздели большой интерфейс на маленькие; классы реализуют только нужные им методы.' },
+      { d:2, q:'Что такое «утиная типизация»?', opts:['Тип данных Duck','Если объект имеет нужные методы, он подходит — тип определяется поведением, а не наследованием','Тип интерфейса','Вид полиморфизма только в C++'], a:1, exp:'Duck typing: «если оно крякает как утка — это утка». Используется в Python; тип определяется набором методов.' },
+      { d:3, q:'В чём разница между паттернами Builder и Abstract Factory?', opts:['Они одинаковы','Builder конструирует сложный объект шаг за шагом; Abstract Factory создаёт семейства связанных объектов','Builder только для строк','Abstract Factory использует наследование'], a:1, exp:'Builder: пошаговое построение одного сложного объекта. Abstract Factory: создание семейств взаимосвязанных объектов.' },
+      { d:3, q:'Что такое принцип CQRS?', opts:['Тип ООП','Command Query Responsibility Segregation: разделение модели записи и чтения','Паттерн Singleton','Алгоритм наследования'], a:1, exp:'CQRS: команды (write) и запросы (read) используют разные модели и потоки данных — улучшает масштабируемость.' },
+      { d:3, q:'В чём суть паттерна Proxy?', opts:['Синоним Singleton','Суррогат: контролирует доступ к объекту, добавляя логирование, кэш или ленивую загрузку','Тип наследования','Фабричный метод'], a:1, exp:'Proxy стоит между клиентом и реальным объектом; может добавлять проверку прав, кэш, отложенную инициализацию.' },
+      { d:3, q:'Что такое Mediator паттерн и зачем он нужен?', opts:['Создание объектов','Посредник: объекты общаются через центральный объект, снижая связность','Наблюдатель','Адаптер'], a:1, exp:'Mediator устраняет прямые зависимости между компонентами: все взаимодействия идут через посредника.' },
+      { d:3, q:'Что такое Event Sourcing?', opts:['Подписка на события','Хранение состояния как последовательности событий, а не текущего снимка','Тип наблюдателя','Паттерн Singleton'], a:1, exp:'Event Sourcing: состояние восстанавливается воспроизведением событий; даёт аудит-лог и возможность перемотки времени.' },
+      { d:3, q:'Что нарушает принцип LSP: квадрат наследует прямоугольник?', opts:['Ничего не нарушает','Квадрат не может заменить прямоугольник, так как изменение одной стороны квадрата меняет обе','Это пример хорошего наследования','Нарушает SRP'], a:1, exp:'Если код ожидает Rectangle и меняет ширину/высоту независимо, подстановка Square нарушит инвариант площади.' },
+      { d:3, q:'Что такое мета-программирование?', opts:['Программирование на ассемблере','Написание кода, который генерирует или изменяет другой код во время компиляции или выполнения','Отладка программ','Тип полиморфизма'], a:1, exp:'Метапрограммирование: декораторы Python, шаблоны C++, рефлексия Java — код управляет кодом.' },
+      { d:3, q:'В чём разница между Facade и Mediator?', opts:['Нет разницы','Facade упрощает интерфейс к подсистеме; Mediator управляет взаимодействием равнозначных компонентов','Facade — поведенческий паттерн','Mediator — структурный'], a:1, exp:'Facade: унифицированный интерфейс к сложной подсистеме. Mediator: координирует взаимодействие между коллегами.' },
+      { d:3, q:'Что такое принцип «Favour composition over inheritance»?', opts:['Наследование всегда лучше','Предпочитай агрегацию/делегирование наследованию для большей гибкости и меньшей связности','Не использовать классы','Использовать только интерфейсы'], a:1, exp:'Composition: поведение собирается из частей динамически. Наследование создаёт жёсткую иерархию и хрупкость.' },
+      { d:3, q:'Что такое AOP (Aspect-Oriented Programming)?', opts:['Вид ООП','Парадигма, позволяющая выносить сквозную функциональность (логирование, транзакции) в «аспекты»','Тип паттерна','Алгоритм'], a:1, exp:'AOP отделяет сквозные задачи (logging, security) от бизнес-логики через аспекты и точки среза (pointcuts).' },
+    ]
+  },
+  {
+    id: 'security',
+    name: 'Кибербезопасность',
+    icon: '🔒',
+    desc: 'Шифрование, уязвимости, криптография',
+    color: 'red',
+    questions: [
+      { d:1, q:'Что такое шифрование?', opts:['Сжатие данных','Преобразование данных в нечитаемый формат с возможностью обратного преобразования ключом','Удаление данных','Резервное копирование'], a:1, exp:'Шифрование защищает конфиденциальность: без ключа расшифровать данные практически невозможно.' },
+      { d:1, q:'Что такое брутфорс-атака?', opts:['SQL-инъекция','Последовательный перебор всех возможных паролей или ключей','Фишинг','XSS-атака'], a:1, exp:'Brute force — исчерпывающий перебор; защита: длинные пароли, CAPTCHA, блокировка после N попыток.' },
+      { d:1, q:'Что такое фишинг?', opts:['Перехват сетевого трафика','Мошеннические письма/сайты, обманом получающие учётные данные','SQL-инъекция','Переполнение буфера'], a:1, exp:'Фишинг — социальная инженерия: поддельный сайт/письмо имитирует доверенный источник.' },
+      { d:1, q:'Что такое двухфакторная аутентификация (2FA)?', opts:['Два разных пароля','Подтверждение личности двумя независимыми методами (пароль + OTP)','Биометрия','Шифрование паролей'], a:1, exp:'2FA требует: что-то знаешь (пароль) + что-то имеешь (OTP) / что-то являешься (биометрия).' },
+      { d:1, q:'Что такое HTTPS?', opts:['Более быстрый HTTP','HTTP с TLS-шифрованием для защиты передаваемых данных','Протокол для файлов','Тип DNS'], a:1, exp:'HTTPS шифрует трафик между браузером и сервером, защищая от перехвата и подмены данных.' },
+      { d:1, q:'Что такое SQL-инъекция?', opts:['Атака на сеть','Внедрение вредоносного SQL-кода через поля ввода','Переполнение буфера','Фишинг'], a:1, exp:'SQL injection: ввод типа \' OR 1=1 -- позволяет обойти авторизацию или получить данные из БД.' },
+      { d:1, q:'Что такое XSS (Cross-Site Scripting)?', opts:['Атака на базу данных','Внедрение вредоносного скрипта в веб-страницу, выполняемого в браузере жертвы','SQL-инъекция','Перехват трафика'], a:1, exp:'XSS: атакующий вставляет JS в страницу; скрипт выполняется у жертвы, крадёт cookie или управляет страницей.' },
+      { d:1, q:'Что такое хэш-функция в криптографии?', opts:['Алгоритм шифрования','Функция одностороннего преобразования данных в фиксированный дайджест','Алгоритм сжатия','Тип шифра'], a:1, exp:'Хэш-функция: из любых данных — фиксированный вывод; необратима, коллизии крайне редки (SHA-256 и др.).' },
+      { d:1, q:'Что такое файрвол?', opts:['Антивирус','Система, контролирующая входящий и исходящий сетевой трафик по правилам','Шифрование','DNS-сервер'], a:1, exp:'Firewall фильтрует трафик по IP, порту и протоколу; может быть аппаратным или программным.' },
+      { d:1, q:'Что такое VPN?', opts:['Тип антивируса','Виртуальная частная сеть, создающая зашифрованный туннель через публичную сеть','Протокол HTTP','Тип файрвола'], a:1, exp:'VPN шифрует трафик и скрывает IP пользователя, создавая защищённый канал через интернет.' },
+      { d:2, q:'Чем симметричное шифрование отличается от асимметричного?', opts:['Нет разницы','Симметричное — один ключ для шифрования и расшифровки; асимметричное — пара открытый/закрытый ключ','Асимметричное только для файлов','Симметричное только в HTTPS'], a:1, exp:'Симметричное (AES) быстро, но нужно безопасно передать ключ. Асимметричное (RSA) решает эту проблему.' },
+      { d:2, q:'Что такое цифровая подпись?', opts:['Тип пароля','Криптографический механизм, подтверждающий авторство и целостность данных','Алгоритм шифрования','Тип сертификата'], a:1, exp:'Цифровая подпись: автор шифрует хэш закрытым ключом; получатель проверяет открытым ключом авторство и неизменность.' },
+      { d:2, q:'Что такое CSRF-атака?', opts:['SQL-инъекция','Злоумышленник заставляет браузер жертвы выполнить нежелательный запрос от её имени','XSS','Перехват cookie'], a:1, exp:'CSRF: жертва переходит на сайт атакующего, который отправляет запрос к целевому сайту, используя куки жертвы.' },
+      { d:2, q:'Что такое PKI (Public Key Infrastructure)?', opts:['Тип брандмауэра','Система управления цифровыми сертификатами и ключами на основе центров сертификации (CA)','Алгоритм шифрования','Тип VPN'], a:1, exp:'PKI: CA выдаёт сертификаты, подтверждая соответствие публичного ключа и идентичности владельца.' },
+      { d:2, q:'Что такое атака «переполнение буфера»?', opts:['SQL-инъекция','Запись данных за пределы выделенного буфера, что позволяет перезаписать память и выполнить произвольный код','Фишинг','XSS'], a:1, exp:'Buffer overflow: программа не проверяет размер ввода; атакующий перезаписывает адрес возврата, захватывая управление.' },
+      { d:2, q:'Что такое нулевой день (zero-day)?', opts:['Первый день месяца','Неизвестная разработчику уязвимость, для которой ещё нет патча','Атака методом перебора','Тип фишинга'], a:1, exp:'Zero-day: уязвимость неизвестна вендору, патча нет — атакующий имеет преимущество до публичного раскрытия.' },
+      { d:2, q:'Что такое salting паролей?', opts:['Шифрование пароля','Добавление случайных данных к паролю перед хэшированием для защиты от радужных таблиц','Хранение в открытом виде','Алгоритм AES'], a:1, exp:'Salt: случайная строка добавляется к паролю; хэш = hash(password + salt). Разные соли — разные хэши одного пароля.' },
+      { d:2, q:'Что такое DDoS-атака?', opts:['SQL-инъекция','Распределённая атака отказа в обслуживании: перегрузка цели запросами с множества систем','Фишинг','Перехват трафика'], a:1, exp:'DDoS: ботнет из тысяч устройств атакует цель; нагрузка исчерпывает ресурсы, делая сервис недоступным.' },
+      { d:2, q:'Что такое принцип наименьших привилегий?', opts:['Администратор имеет все права','Каждый процесс/пользователь должен иметь минимум прав, необходимых для работы','Все пользователи равны','Только один пользователь в системе'], a:1, exp:'Least privilege снижает ущерб при компрометации: взломанный аккаунт с минимальными правами нанесёт меньше вреда.' },
+      { d:2, q:'Что такое OWASP Top 10?', opts:['Список языков программирования','Список 10 наиболее критических уязвимостей веб-приложений','Алгоритмы шифрования','Протоколы сети'], a:1, exp:'OWASP Top 10 — авторитетный список наиболее распространённых и опасных веб-уязвимостей (injection, broken auth и др.).' },
+      { d:3, q:'Что такое атака по сторонним каналам (side-channel attack)?', opts:['SQL-инъекция','Атака, использующая физические утечки (время выполнения, энергопотребление, электромагнитные излучения) а не алгоритмические слабости','Переполнение буфера','CSRF'], a:1, exp:'Side-channel: Meltdown/Spectre используют кэш-тайминги ЦП; RSA уязвим к тайминговым атакам без constant-time кода.' },
+      { d:3, q:'Что такое атака на цепочку поставок (supply chain attack)?', opts:['Атака на склад','Компрометация стороннего ПО/библиотеки/CI, через которые заражается конечная цель','SQL-инъекция','DDoS'], a:1, exp:'SolarWinds, xz-utils — атакующие внедряются в цепочку поставок ПО, чтобы атаковать тысячи конечных пользователей.' },
+      { d:3, q:'Что такое криптографический примитив Key Derivation Function (KDF)?', opts:['Алгоритм шифрования','Функция получения криптографически стойкого ключа из пароля (bcrypt, Argon2, PBKDF2)','Тип цифровой подписи','Алгоритм обмена ключами'], a:1, exp:'KDF намеренно медленны (cost factor), чтобы замедлить перебор; Argon2 также требует много памяти (memory-hard).' },
+      { d:3, q:'Что такое атака Padding Oracle?', opts:['Атака на DNS','Атака на CBC-шифрование, использующая информацию о корректности padding для побайтовой расшифровки','XSS','Переполнение буфера'], a:1, exp:'Padding Oracle: если сервер сообщает об ошибке padding, атакующий побайтово восстанавливает открытый текст без ключа.' },
+      { d:3, q:'Что такое forward secrecy (PFS)?', opts:['Долгосрочное хранение ключей','Свойство: компрометация долгосрочного ключа не раскрывает прошлые сессионные ключи (используются эфемерные ECDH)','Тип 2FA','Алгоритм подписи'], a:1, exp:'PFS: в TLS 1.3 сессионные ключи генерируются через ECDHE и удаляются; прошлый трафик не расшифровать позже.' },
+      { d:3, q:'Что такое SSRF (Server-Side Request Forgery)?', opts:['XSS на сервере','Атака, при которой сервер выполняет запросы к внутренним ресурсам от лица атакующего','SQL-инъекция','CSRF'], a:1, exp:'SSRF: атакующий заставляет сервер обращаться к internal API, метаданным облака (169.254.169.254) или файлам системы.' },
+      { d:3, q:'Что такое экспоненциальный алгоритм атаки встречей посередине (meet-in-the-middle)?', opts:['DDoS-атака','Атака на двойное шифрование: вычисляются таблицы для обеих половин, затем ищется совпадение','SQL-инъекция','Атака на RSA'], a:1, exp:'Meet-in-the-middle снижает 2DES со сложности 2¹¹² до 2⁵⁷ — поэтому двойное DES небезопасно.' },
+      { d:3, q:'Что такое атака Spectre?', opts:['Тип фишинга','Атака по побочному каналу через спекулятивное исполнение ЦП, позволяющая читать чужую память','Buffer overflow','SQL-инъекция'], a:1, exp:'Spectre использует branch prediction ЦП: злоумышленник анализирует кэш-тайминги, читая чужие данные из памяти.' },
+      { d:3, q:'Что такое разница между аутентификацией и авторизацией?', opts:['Это одно и то же','Аутентификация — кто ты (проверка личности); авторизация — что тебе можно (проверка прав)','Авторизация — вход в систему','Аутентификация — разрешение доступа'], a:1, exp:'Authentication: «Ты действительно Иван?». Authorization: «Иван имеет право читать этот файл?». Разные задачи.' },
+      { d:3, q:'Что такое атака на RSA через малую экспоненту (Coppersmith)?', opts:['Перебор ключей','Если публичная экспонента e мала и одно сообщение шифруется несколькими ключами, можно восстановить открытый текст без ключа','SQL-инъекция','DDoS'], a:1, exp:'Coppersmith: при e=3 и шифровании одного m тремя ключами — m³ можно извлечь через CRT без факторизации модуля.' },
+    ]
+  },
+  {
+    id: 'os',
+    name: 'Операционные системы',
+    icon: '🖥️',
+    desc: 'Процессы, память, файловые системы, планировщик',
+    color: 'pink',
+    questions: [
+      { d:1, q:'Что такое операционная система?', opts:['Приложение для работы с файлами','Системное ПО, управляющее аппаратурой и обеспечивающее запуск программ','Браузер','Компилятор'], a:1, exp:'ОС — посредник между железом и программами: управляет памятью, процессами, вводом-выводом и файлами.' },
+      { d:1, q:'Что такое процесс?', opts:['Файл на диске','Программа в стадии выполнения с собственным адресным пространством и ресурсами','Функция в программе','Пользовательский аккаунт'], a:1, exp:'Процесс — экземпляр выполняемой программы; имеет PID, память, открытые файлы и другие ресурсы.' },
+      { d:1, q:'Чем поток (thread) отличается от процесса?', opts:['Нет разницы','Потоки разделяют память одного процесса; у процессов изолированные адресные пространства','Процесс легковесней','Поток медленнее'], a:1, exp:'Threads в одном процессе разделяют heap и код; переключение между потоками дешевле, чем между процессами.' },
+      { d:1, q:'Что такое дедлок (deadlock)?', opts:['Тип сортировки','Ситуация, когда два или более процесса бесконечно ждут ресурсы, захваченные друг другом','Переполнение памяти','Ошибка компилятора'], a:1, exp:'Deadlock: A держит R1, ждёт R2; B держит R2, ждёт R1 — оба заблокированы навсегда.' },
+      { d:1, q:'Что такое виртуальная память?', opts:['Память на SSD','Иллюзия большего RAM с помощью дискового пространства и страничной адресации','Кэш-память','ОЗУ'] , a:1, exp:'Виртуальная память позволяет программам использовать больше памяти, чем есть физически; ОС подкачивает страницы с диска.' },
+      { d:1, q:'Что такое файловая система?', opts:['Программа для управления процессами','Способ организации и хранения файлов на носителе','Протокол сети','Тип памяти'], a:1, exp:'Файловая система (NTFS, ext4, FAT32) определяет, как данные хранятся на диске и как к ним обращаться.' },
+      { d:1, q:'Что такое системный вызов (syscall)?', opts:['Функция программы','Запрос программы к ядру ОС для выполнения привилегированной операции','Тип прерывания','Метод класса'], a:1, exp:'Syscall — интерфейс между программой и ядром: read(), write(), fork(), open() — системные вызовы в Linux.' },
+      { d:1, q:'Что такое планировщик процессов?', opts:['Программа расписания','Компонент ОС, решающий, какой процесс получит CPU и на сколько','Менеджер памяти','Файловая система'], a:1, exp:'Планировщик (scheduler) выбирает следующий процесс для выполнения по алгоритму (Round Robin, CFS и др.).' },
+      { d:1, q:'Что такое прерывание (interrupt)?', opts:['Зависание ОС','Сигнал устройства или программы, прерывающий выполнение текущей инструкции ЦП для обработки события','Тип ошибки компиляции','Вид памяти'], a:1, exp:'Прерывания: клавиатура нажата — ЦП прерывает программу, вызывает обработчик, затем возвращается обратно.' },
+      { d:1, q:'В чём разница между kernel mode и user mode?', opts:['Нет разницы','Kernel mode: полный доступ к железу; user mode: ограниченные привилегии, требует syscall для доступа к ресурсам','User mode быстрее','Kernel mode только для сети'], a:1, exp:'Разделение защищает ОС: программа в user mode не может напрямую обращаться к памяти другого процесса или устройствам.' },
+      { d:2, q:'Что такое алгоритм Round Robin в планировщике?', opts:['Приоритетная очередь','Каждый процесс получает квант времени; по истечении — следующий в очереди','Долгосрочное планирование','FIFO без вытеснения'], a:1, exp:'Round Robin: каждый процесс получает фиксированный квант (например, 10 мс); при превышении — вытесняется в конец очереди.' },
+      { d:2, q:'Что такое страничная организация памяти (paging)?', opts:['Хранение файлов','Разбиение виртуальной и физической памяти на фиксированные блоки (страницы/фреймы) для удобного отображения','Тип кэша','Алгоритм сортировки'], a:1, exp:'Paging: виртуальная страница (4 КБ) отображается на физический фрейм через таблицу страниц; устраняет внешнюю фрагментацию.' },
+      { d:2, q:'Что такое TLB (Translation Lookaside Buffer)?', opts:['Тип диска','Кэш таблицы страниц в ЦП для ускорения трансляции виртуальных адресов','Тип файловой системы','Алгоритм планировщика'], a:1, exp:'TLB хранит последние трансляции страниц; попадание в TLB позволяет не лезть в RAM за таблицей страниц.' },
+      { d:2, q:'Что такое race condition?', opts:['Гонка сортировки','Ситуация, когда результат зависит от порядка выполнения потоков, что приводит к непредсказуемому поведению','Тип дедлока','Переполнение буфера'], a:1, exp:'Race condition: два потока читают-изменяют-пишут общую переменную; результат зависит от того, кто успел первым.' },
+      { d:2, q:'Что такое семафор?', opts:['Тип процесса','Примитив синхронизации: счётчик для ограничения доступа к ресурсу (P/wait и V/signal)','Тип памяти','Алгоритм планировщика'], a:1, exp:'Semaphore Дейкстры: P() уменьшает счётчик (блокирует при 0), V() увеличивает (будит ожидающего).' },
+      { d:2, q:'Что такое Copy-On-Write (COW) при fork()?', opts:['Копирование всей памяти','Страницы физически копируются только при записи в них; до этого родитель и потомок разделяют страницы','Тип файловой системы','Алгоритм кэша'], a:1, exp:'COW делает fork() быстрым: exec() сразу заменяет адресное пространство, копирование большинства страниц не нужно.' },
+      { d:2, q:'Что такое inode в файловой системе?', opts:['Имя файла','Структура данных, хранящая метаданные файла (права, размер, указатели на блоки) кроме имени','Тип раздела','Директория'], a:1, exp:'Inode: уникальный номер + метаданные файла. Имя файла — лишь ссылка на inode в директории.' },
+      { d:2, q:'Что такое POSIX?', opts:['Тип файловой системы','Стандарт совместимости ОС: определяет API системных вызовов, файловой системы, процессов','Протокол сети','Язык программирования'], a:1, exp:'POSIX (IEEE 1003): Linux, macOS, BSD совместимы с ним; обеспечивает переносимость программ между Unix-системами.' },
+      { d:2, q:'Что такое OOM Killer в Linux?', opts:['Антивирус','Механизм ядра, убивающий процессы при нехватке памяти','Тип планировщика','Файловая система'], a:1, exp:'Out-of-Memory Killer: когда памяти нет, ядро выбирает «наиболее вредный» процесс и отправляет ему SIGKILL.' },
+      { d:2, q:'Чем UNIX-сигналы отличаются от системных вызовов?', opts:['Нет разницы','Сигналы — асинхронные уведомления процессу (SIGTERM, SIGKILL); syscall — синхронный запрос к ядру','Сигналы синхронны','Syscall асинхронен'], a:1, exp:'Сигналы прерывают процесс асинхронно (как программное прерывание); обработчик можно задать через signal()/sigaction().' },
+      { d:3, q:'Что такое NUMA (Non-Uniform Memory Access)?', opts:['Тип файловой системы','Архитектура многопроцессорных систем: каждый CPU имеет локальную память, доступ к чужой медленнее','Алгоритм кэша','Тип виртуальной памяти'], a:1, exp:'В NUMA-системах задержка памяти зависит от «расстояния» до CPU; ОС старается размещать данные в локальном узле.' },
+      { d:3, q:'Что такое механизм mmap?', opts:['Тип malloc','Системный вызов, отображающий файл или устройство в виртуальное адресное пространство процесса','Тип сигнала','Алгоритм планировщика'], a:1, exp:'mmap: файл или анонимный регион доступен как массив в памяти; страницы подкачиваются по требованию (demand paging).' },
+      { d:3, q:'Что такое Completely Fair Scheduler (CFS) в Linux?', opts:['Round Robin','Планировщик, использующий красно-чёрное дерево и виртуальное время для справедливого распределения CPU','FIFO-планировщик','Планировщик реального времени'], a:1, exp:'CFS: каждый процесс имеет vruntime; выбирается процесс с наименьшим vruntime из rb-дерева — O(log n) на выбор.' },
+      { d:3, q:'Что такое huge pages и зачем они нужны?', opts:['Большие файлы','Страницы памяти по 2 МБ или 1 ГБ; снижают нагрузку на TLB и ускоряют работу с большими данными','Тип SWAP','Раздел диска'], a:1, exp:'Huge pages снижают TLB-промахи: для 1 ГБ данных нужно 1 запись в TLB (1 ГБ страница) vs 262144 записей (4 КБ страницы).' },
+      { d:3, q:'Что такое контейнеры (Docker) с точки зрения ядра Linux?', opts:['Виртуальные машины','Процессы с изолированными namespace (PID, net, mnt, uts) и ограниченными ресурсами через cgroups','Полная виртуализация','Тип файловой системы'], a:1, exp:'Container = namespaces (изоляция видимости) + cgroups (ограничение CPU/памяти) + union filesystem (overlayfs).' },
+      { d:3, q:'Что такое механизм Copy-on-Write в файловых системах (ZFS, Btrfs)?', opts:['То же, что и в fork()','Новые данные записываются в новое место; старый блок остаётся — обеспечивает атомарность и снимки (snapshots)','Тип RAID','Алгоритм сжатия'], a:1, exp:'CoW в ФС: при изменении данных — новый блок, указатели обновляются атомарно. Никаких разрушений при сбое питания.' },
+      { d:3, q:'Что такое eBPF в Linux?', opts:['Тип прерывания','Механизм безопасного выполнения байт-кода в ядре для мониторинга, трассировки и сетевой фильтрации','Тип сигнала','Алгоритм CFS'], a:1, exp:'eBPF: программы проверяются верификатором и JIT-компилируются в ядро; основа Cilium, bcc, трассировки без перекомпиляции.' },
+      { d:3, q:'Что такое механизм io_uring?', opts:['Тип сигнала','Интерфейс асинхронного I/O в Linux через разделяемые кольцевые буферы с минимальным числом syscall','Тип файловой системы','Алгоритм планировщика'], a:1, exp:'io_uring (Linux 5.1): отправка и получение I/O-запросов без syscall на каждый запрос — до 7 млн IOPS на современном NVMe.' },
+      { d:3, q:'Что такое ASLR (Address Space Layout Randomization)?', opts:['Алгоритм планировщика','Рандомизация базовых адресов сегментов памяти для усложнения эксплойтов','Тип файловой системы','Алгоритм кэширования'], a:1, exp:'ASLR случайно размещает стек, heap и библиотеки; атакующий не знает адреса return-to-libc или ROP-гаджетов.' },
+      { d:3, q:'Что такое механизм buddy system для управления памятью?', opts:['Тип процесса','Алгоритм распределения физических страниц блоками степеней двойки для быстрого объединения свободных блоков','Тип SWAP','Тип индекса'], a:1, exp:'Buddy system: блоки размером 2^k; при освобождении блок объединяется с «другом» (buddy) того же размера — O(log n) на операцию.' },
+    ]
+  }
+];
+
+// ============================================================
+//  STATE
+// ============================================================
+let state = {
+  topic: null,
+  questions: [],
+  current: 0,
+  correct: 0,
+  wrong: 0,
+  streak: 0,
+  maxStreak: 0,
+  diffLevel: 1,        // 1=easy,2=med,3=hard
+  consRight: 0,        // consecutive right
+  consWrong: 0,        // consecutive wrong
+  answered: false,
+  streakHistory: [],   // last 7: 'correct'/'wrong'
+};
+
+// ============================================================
+//  RENDER TOPICS
+// ============================================================
+function renderTopics() {
+  const grid = document.getElementById('topicsGrid');
+  grid.innerHTML = '';
+  TOPICS.forEach(topic => {
+    const card = document.createElement('div');
+    card.className = 'topic-card';
+    card.setAttribute('data-color', topic.color);
+    card.onclick = () => startQuiz(topic.id);
+    const total = topic.questions.length;
+    card.innerHTML = `
+      <div class="topic-icon">${topic.icon}</div>
+      <div class="topic-name">${topic.name}</div>
+      <div class="topic-desc">${topic.desc}</div>
+      <div class="topic-meta">
+        <span class="badge badge-easy">${topic.questions.filter(q=>q.d===1).length} лёгких</span>
+        <span class="badge badge-med">${topic.questions.filter(q=>q.d===2).length} средних</span>
+        <span class="badge badge-hard">${topic.questions.filter(q=>q.d===3).length} сложных</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ============================================================
+//  START QUIZ
+// ============================================================
+function startQuiz(topicId) {
+  const topic = TOPICS.find(t => t.id === topicId);
+  state = {
+    topic,
+    questions: buildQuestionSet(topic.questions),
+    current: 0,
+    correct: 0,
+    wrong: 0,
+    streak: 0,
+    maxStreak: 0,
+    diffLevel: 1,
+    consRight: 0,
+    consWrong: 0,
+    answered: false,
+    streakHistory: [],
+  };
+
+  document.getElementById('quizTopicName').textContent = topic.name;
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function buildQuestionSet(allQ) {
+  // Take ~10 easy, 10 med, 10 hard, shuffle each group
+  const easy = shuffle(allQ.filter(q=>q.d===1)).slice(0,10);
+  const med  = shuffle(allQ.filter(q=>q.d===2)).slice(0,10);
+  const hard = shuffle(allQ.filter(q=>q.d===3)).slice(0,10);
+  return [...easy, ...med, ...hard]; // will be reordered by adaptive
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+// ============================================================
+//  ADAPTIVE LOGIC — build pool based on current diffLevel
+// ============================================================
+function getAdaptivePool() {
+  const all = state.topic.questions;
+  const answered = state.questions.slice(0, state.current);
+  const used = new Set(answered.map(q=>q.q));
+  const available = all.filter(q => q.d === state.diffLevel && !used.has(q.q));
+  return available;
+}
+
+// ============================================================
+//  RENDER QUESTION
+// ============================================================
+function renderQuestion() {
+  const q = state.questions[state.current];
+  state.answered = false;
+
+  const total = state.questions.length;
+  document.getElementById('qCounter').textContent = `${state.current+1} / ${total}`;
+  document.getElementById('progressFill').style.width = `${(state.current/total)*100}%`;
+
+  // Difficulty badge
+  const db = document.getElementById('diffBadge');
+  db.className = 'diff-badge diff-' + state.diffLevel;
+  db.textContent = ['','Легко','Средне','Сложно'][state.diffLevel];
+
+  // Streak dots
+  const sb = document.getElementById('streakBar');
+  const label = sb.querySelector('.streak-label');
+  sb.innerHTML = '';
+  sb.appendChild(label);
+  const hist = state.streakHistory.slice(-7);
+  hist.forEach(h => {
+    const dot = document.createElement('div');
+    dot.className = 'streak-dot ' + h;
+    sb.appendChild(dot);
+  });
+
+  // Q number
+  document.getElementById('qNumber').textContent = `ВОПРОС ${state.current+1}`;
+
+  // Q text
+  document.getElementById('qText').textContent = q.q;
+
+  // Code block
+  const codeEl = document.getElementById('qCode');
+  if (q.code) {
+    codeEl.textContent = q.code;
+    codeEl.style.display = 'block';
+  } else {
+    codeEl.style.display = 'none';
+  }
+
+  // Options
+  const optList = document.getElementById('optionsList');
+  optList.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span>${opt}`;
+    btn.onclick = () => selectAnswer(i, q);
+    optList.appendChild(btn);
+  });
+
+  // Hide explanation & next
+  const expEl = document.getElementById('qExplanation');
+  expEl.classList.remove('show');
+  expEl.textContent = '';
+  document.getElementById('nextBtn').classList.remove('show');
+
+  // Animate card
+  const card = document.getElementById('qCard');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'cardIn 0.4s cubic-bezier(0.34,1.2,0.64,1) both';
+}
+
+// ============================================================
+//  SELECT ANSWER
+// ============================================================
+function selectAnswer(chosen, q) {
+  if (state.answered) return;
+  state.answered = true;
+
+  const buttons = document.querySelectorAll('.option-btn');
+  const isCorrect = chosen === q.a;
+
+  buttons.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.a) btn.classList.add('correct');
+    else if (i === chosen && !isCorrect) btn.classList.add('wrong');
+  });
+
+  if (isCorrect) {
+    state.correct++;
+    state.streak++;
+    state.consRight++;
+    state.consWrong = 0;
+    if (state.streak > state.maxStreak) state.maxStreak = state.streak;
+    state.streakHistory.push('correct');
+
+    // Adaptive: level up after 3 correct in a row
+    if (state.consRight >= 3 && state.diffLevel < 3) {
+      state.diffLevel++;
+      state.consRight = 0;
+      showNotif('level');
+      injectNextQuestion();
+    }
+  } else {
+    state.wrong++;
+    state.streak = 0;
+    state.consRight = 0;
+    state.consWrong++;
+    state.streakHistory.push('wrong');
+
+    // Adaptive: level down after 2 wrong in a row
+    if (state.consWrong >= 2 && state.diffLevel > 1) {
+      state.diffLevel--;
+      state.consWrong = 0;
+      showNotif('down');
+      injectNextQuestion();
+    }
+  }
+
+  // Explanation
+  const expEl = document.getElementById('qExplanation');
+  expEl.textContent = '💡 ' + q.exp;
+  expEl.classList.add('show');
+
+  // Next button
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.classList.add('show');
+  if (state.current >= state.questions.length - 1) {
+    nextBtn.textContent = '🏁 Завершить тест';
+  } else {
+    nextBtn.textContent = 'Следующий вопрос →';
+  }
+}
+
+// inject adaptive question into remaining pool
+function injectNextQuestion() {
+  const pool = getAdaptivePool();
+  if (pool.length === 0) return;
+  const next = pool[Math.floor(Math.random()*pool.length)];
+  // insert after current+1
+  const insertAt = state.current + 2;
+  if (insertAt <= state.questions.length) {
+    state.questions.splice(insertAt, 0, next);
+    // keep total at 30
+    if (state.questions.length > 30) {
+      // remove last that is of different diff
+      for (let i = state.questions.length-1; i > insertAt; i--) {
+        if (state.questions[i].d !== state.diffLevel) {
+          state.questions.splice(i,1);
+          break;
+        }
+      }
+    }
+  }
+}
+
+function showNotif(type) {
+  if (type === 'level') {
+    const el = document.getElementById('levelNotif');
+    el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'), 2200);
+  } else {
+    const el = document.getElementById('levelDownNotif');
+    el.style.transform = 'translateX(-50%) translateY(0)';
+    setTimeout(()=>el.style.transform = 'translateX(-50%) translateY(-80px)', 2200);
+  }
+}
+
+// ============================================================
+//  NEXT QUESTION
+// ============================================================
+function nextQuestion() {
+  state.current++;
+  if (state.current >= state.questions.length) {
+    showResults();
+  } else {
+    renderQuestion();
+  }
+}
+
+// ============================================================
+//  RESULTS
+// ============================================================
+function showResults() {
+  showScreen('result');
+  const total = state.questions.length;
+  const pct = Math.round((state.correct/total)*100);
+
+  let emoji, title, subtitle;
+  if (pct >= 90) { emoji='🏆'; title='Отлично!'; subtitle='Ты настоящий эксперт!'; }
+  else if (pct >= 70) { emoji='🎯'; title='Хороший результат!'; subtitle='Ещё немного практики — и будет идеально'; }
+  else if (pct >= 50) { emoji='📚'; title='Неплохо!'; subtitle='Есть над чем поработать'; }
+  else { emoji='💪'; title='Не сдавайся!'; subtitle='Повтори материал и попробуй снова'; }
+
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultSubtitle').textContent = subtitle;
+  document.getElementById('scorePct').textContent = pct + '%';
+  document.getElementById('statCorrect').textContent = state.correct;
+  document.getElementById('statWrong').textContent = state.wrong;
+  document.getElementById('statStreak').textContent = state.maxStreak;
+
+  // Circle animation
+  const circle = document.getElementById('scoreCircle');
+  const circumference = 339.3;
+  setTimeout(() => {
+    circle.style.strokeDashoffset = circumference - (pct/100)*circumference;
+    if (pct >= 90) circle.style.stroke = 'var(--easy)';
+    else if (pct >= 70) circle.style.stroke = 'var(--warn)';
+    else circle.style.stroke = 'var(--hard)';
+  }, 100);
+
+  // Confetti for good results
+  if (pct >= 70) spawnConfetti();
+}
+
+function spawnConfetti() {
+  const wrap = document.getElementById('confettiWrap');
+  wrap.innerHTML = '';
+  const colors = ['#00e5a0','#7b5ea7','#ff6b6b','#ffd166','#4fc3f7','#f06292'];
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.cssText = `
+      left: ${Math.random()*100}%;
+      background: ${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration: ${1.5+Math.random()*2}s;
+      animation-delay: ${Math.random()*0.8}s;
+      transform: rotate(${Math.random()*360}deg);
+      border-radius: ${Math.random()>0.5?'50%':'2px'};
+      width: ${6+Math.random()*8}px;
+      height: ${6+Math.random()*8}px;
+    `;
+    wrap.appendChild(p);
+  }
+  setTimeout(()=> wrap.innerHTML = '', 4000);
+}
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function showScreen(name) {
+  ['landing','quiz','result'].forEach(s => {
+    const el = document.getElementById('screen-'+s);
+    el.style.display = 'none';
+  });
+  const target = document.getElementById('screen-'+name);
+  target.style.display = 'flex';
+}
+
+function goHome() {
+  document.getElementById('scoreCircle').style.strokeDashoffset = '339.3';
+  showScreen('landing');
+}
+
+function retryQuiz() {
+  document.getElementById('scoreCircle').style.strokeDashoffset = '339.3';
+  startQuiz(state.topic.id);
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+renderTopics();
+showScreen('landing');
+</script>
+
+</body>
+</htm>
